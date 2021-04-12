@@ -101,6 +101,7 @@ int main(int argc, char** argv)
 
   if(at == PIPESQ) pipesq_run(srcbuf,dstbuf,n,mask);
   else if(at == SPSCRB) spscrb_run(srcbuf,dstbuf,n,mask);
+  else if(at == VTLINK) vtlink_run(srcbuf,dstbuf,n,mask);
   else
   {
     std::cerr << "Invalid Buffer type" << std::endl;

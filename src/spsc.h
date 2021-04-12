@@ -147,12 +147,12 @@ void spscrb_run(uint64_t* srcbuf, uint64_t* dstbuf, unsigned n, cpu_set_t mask[2
   delete q;
 }
 
-#ifdef VL
 #include "vl/vl.h"
+#include <cassert>
 struct VPush
 {
   vlendpt_t end;
-  VPush(int fd) :
+  VPush(int fd)
   {
     open_twin_vl_as_producer(fd, &end, 1);
   }
@@ -191,7 +191,7 @@ void vtlink_run(uint64_t* srcbuf, uint64_t* dstbuf, unsigned n, cpu_set_t mask[2
 {
   int fd = mkvl();
   if(fd < 0) {std::cerr << "Unable to initialize virtualLink queue" << std::endl; exit(-5);}
-  std::function<void*()> recv = [dstbuf,&pipefd,n,fd]()
+  std::function<void*()> recv = [dstbuf,n,fd]()
   {
     VPop pop(fd);
     for(unsigned i = 0; i < n; i++) dstbuf[i] = rando();
@@ -202,7 +202,7 @@ void vtlink_run(uint64_t* srcbuf, uint64_t* dstbuf, unsigned n, cpu_set_t mask[2
     t.e();
     return nullptr;
   };
-  auto send = [srcbuf,&pipefd,n,fd]()
+  auto send = [srcbuf,n,fd]()
   {
     VPush push(fd);
     while(bar != 1);
@@ -210,7 +210,7 @@ void vtlink_run(uint64_t* srcbuf, uint64_t* dstbuf, unsigned n, cpu_set_t mask[2
     m5_reset_stats(0,0);
     bar++;
     while(bar != 2);
-    for(unsigned i = 0; i < n; i++) push(srcbuf[i]);
+    for(unsigned i = 0; i < n; i++) push.push(srcbuf[i]);
   };
   pthread_attr_setaffinity_np(&attr1, sizeof(mask[1]), &mask[1]);
   pthread_setaffinity_np(pthread_self(), sizeof(mask[0]), &mask[0]);
@@ -219,6 +219,5 @@ void vtlink_run(uint64_t* srcbuf, uint64_t* dstbuf, unsigned n, cpu_set_t mask[2
   pthread_join(t1, nullptr);
   t.p("VTLINK");
 }
-#endif //VL
 
 #endif //SPSC_H
